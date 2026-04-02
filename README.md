@@ -193,6 +193,30 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 
 本项目包含 `c2-server` skill，让您可以在 Claude Code 中使用自然语言操作服务端。
 
+##### 前置条件
+
+⚠️ **在使用此 skill 之前，必须先完成以下步骤：**
+
+1. **编译项目** - 生成 `server.exe` 二进制文件
+2. **添加到 PATH** - 将 `server.exe` 所在目录添加到系统环境变量
+
+**详细步骤：**
+
+```powershell
+# 步骤1：编译项目
+cd D:\code\go\cli-rat\cli-rat-with-skills
+powershell -File build.ps1
+
+# 步骤2：添加到环境变量（永久有效，请替换为你的实际路径）
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";D:\code\go\cli-rat\cli-rat-with-skills", "User")
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
+
+# 步骤3：验证安装
+server help
+```
+
+如果 `server help` 命令可以正常执行，说明配置成功，可以继续安装 skill。
+
 ##### Skill 文件位置
 
 Skill 文件位于项目根目录：

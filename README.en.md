@@ -193,6 +193,30 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 
 This project includes the `c2-server` skill, allowing you to operate the server using natural language in Claude Code.
 
+##### Prerequisites
+
+⚠️ **Before using this skill, you must complete the following steps:**
+
+1. **Compile the project** - Generate the `server.exe` binary file
+2. **Add to PATH** - Add the directory containing `server.exe` to your system environment variables
+
+**Detailed steps:**
+
+```powershell
+# Step 1: Compile the project
+cd D:\code\go\cli-rat\cli-rat-with-skills
+powershell -File build.ps1
+
+# Step 2: Add to environment variables (permanent, replace with your actual path)
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";D:\code\go\cli-rat\cli-rat-with-skills", "User")
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
+
+# Step 3: Verify installation
+server help
+```
+
+If the `server help` command executes successfully, the configuration is correct and you can proceed with skill installation.
+
 ##### Skill File Location
 
 The skill file is located in the project root directory:

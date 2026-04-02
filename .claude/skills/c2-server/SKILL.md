@@ -7,6 +7,78 @@ description: 命令分发服务端控制工具。用于管理客户端、发送�
 
 服务端命令分发系统的管理工具，用于管理客户端连接和远程命令执行。
 
+## 前置条件
+
+在使用此 skill 之前，**必须**完成以下步骤：
+
+### 1. 编译项目
+
+首先需要将项目编译成二进制文件：
+
+```powershell
+# 进入项目目录
+cd D:\code\go\cli-rat\cli-rat-with-skills
+
+# 使用构建脚本编译（推荐）
+powershell -File build.ps1
+
+# 或手动编译
+go build -o server.exe server/main.go server/command.go
+go build -o client.exe client/main.go
+```
+
+编译成功后会生成 `server.exe` 文件。
+
+### 2. 将 server.exe 添加到系统 PATH
+
+将编译好的 `server.exe` 添加到系统环境变量 PATH 中，才能在任意位置使用 `server` 命令。
+
+#### 方法一：临时添加（当前会话有效）
+
+```powershell
+# 添加到当前会话 PATH（请替换为你的实际项目路径）
+$env:PATH += ";D:\code\go\cli-rat\cli-rat-with-skills"
+
+# 验证是否成功
+server help
+```
+
+#### 方法二：永久添加（推荐）
+
+```powershell
+# 添加到用户 PATH（永久有效，请替换为你的实际项目路径）
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";D:\code\go\cli-rat\cli-rat-with-skills", "User")
+
+# 刷新当前会话的环境变量
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
+
+# 验证是否成功
+server help
+```
+
+#### 方法三：图形界面添加
+
+1. 右键「此电脑」→「属性」
+2. 「高级系统设置」→「环境变量」
+3. 在「用户变量」中找到 `Path`，点击「编辑」
+4. 点击「新建」，添加你的项目路径（例如：`D:\code\go\cli-rat\cli-rat-with-skills`）
+5. 确定保存，重新打开终端
+
+### 3. 验证安装
+
+```powershell
+# 查看 server 命令是否可用
+server help
+
+# 如果看到帮助信息，说明配置成功
+```
+
+## 重要提醒
+
+⚠️ **在使用本 skill 的任何功能之前，请确保已完成上述所有步骤！**
+
+如果 `server` 命令不可用，本 skill 将无法正常工作。
+
 ## 快速参考
 
 ```bash
