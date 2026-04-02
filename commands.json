@@ -1,0 +1,76 @@
+{
+  "commands": [
+    {
+      "id": "cmd-20260403010214",
+      "content": "ipcnofig",
+      "client_id": "client-20260403010148",
+      "status": "failed",
+      "result": "exec: \"ipcnofig\": executable file not found in %PATH%",
+      "created_at": "2026-04-03T01:02:14.4738799+08:00",
+      "completed_at": "2026-04-03T01:02:14.577726+08:00"
+    },
+    {
+      "id": "cmd-20260403010615",
+      "content": "ipconfig",
+      "client_id": "client-20260403010555",
+      "status": "completed",
+      "result": "\r\nWindows IP ����\r\n\r\n\r\nδ֪������ singbox_tun:\r\n\r\n   �����ض��� DNS ��׺ . . . . . . . : \r\n   �������� IPv6 ��ַ. . . . . . . . : fe80::bde2:a13c:a394:dd80%14\r\n   IPv4 ��ַ . . . . . . . . . . . . : 172.18.0.1\r\n   ��������  . . . . . . . . . . . . : 255.255.255.252\r\n   Ĭ������. . . . . . . . . . . . . : 172.18.0.2\r\n\r\n��̫�������� ��̫��:\r\n\r\n   �����ض��� DNS ��׺ . . . . . . . : \r\n   IPv6 ��ַ . . . . . . . . . . . . : fd00:14d8:64e1:59b0::1000\r\n   IPv6 ��ַ . . . . . . . . . . . . : fd00:14d8:64e1:59b0:c405:ee4d:ee26:db38\r\n   �������� IPv6 ��ַ. . . . . . . . : fe80::1fc7:f3f9:ccb1:d6bd%12\r\n   IPv4 ��ַ . . . . . . . . . . . . : 192.168.101.101\r\n   ��������  . . . . . . . . . . . . : 255.255.255.0\r\n   Ĭ������. . . . . . . . . . . . . : fe80::16d8:64ff:fee1:59b0%12\r\n                                       192.168.101.1\r\n\r\n���߾����������� WLAN:\r\n\r\n   ý��״̬  . . . . . . . . . . . . : ý���ѶϿ�����\r\n   �����ض��� DNS ��׺ . . . . . . . : \r\n\r\n���߾����������� ��������* 9:\r\n\r\n   ý��״̬  . . . . . . . . . . . . : ý���ѶϿ�����\r\n   �����ض��� DNS ��׺ . . . . . . . : \r\n\r\n���߾����������� ��������* 10:\r\n\r\n   ý��״̬  . . . . . . . . . . . . : ý���ѶϿ�����\r\n   �����ض��� DNS ��׺ . . . . . . . : \r\n\r\n��̫�������� VMware Network Adapter VMnet1:\r\n\r\n   �����ض��� DNS ��׺ . . . . . . . : \r\n   �������� IPv6 ��ַ. . . . . . . . : fe80::cab3:4455:1f76:ebd9%3\r\n   IPv4 ��ַ . . . . . . . . . . . . : 192.168.38.1\r\n   ��������  . . . . . . . . . . . . : 255.255.255.0\r\n   Ĭ������. . . . . . . . . . . . . : \r\n\r\n��̫�������� VMware Network Adapter VMnet8:\r\n\r\n   �����ض��� DNS ��׺ . . . . . . . : \r\n   �������� IPv6 ��ַ. . . . . . . . : fe80::698:eb26:5d6f:c3fc%13\r\n   IPv4 ��ַ . . . . . . . . . . . . : 192.168.23.1\r\n   ��������  . . . . . . . . . . . . : 255.255.255.0\r\n   Ĭ������. . . . . . . . . . . . . : \r\n\r\n��̫�������� ������������:\r\n\r\n   ý��״̬  . . . . . . . . . . . . : ý���ѶϿ�����\r\n   �����ض��� DNS ��׺ . . . . . . . : \r\n",
+      "created_at": "2026-04-03T01:06:15.9929036+08:00",
+      "completed_at": "2026-04-03T01:06:16.9085975+08:00"
+    },
+    {
+      "id": "cmd-20260403011508",
+      "content": "dir",
+      "client_id": "client-20260403010555",
+      "status": "failed",
+      "result": "exec: \"dir\": executable file not found in %PATH%",
+      "created_at": "2026-04-03T01:15:08.3229652+08:00",
+      "completed_at": "2026-04-03T01:15:09.1268695+08:00"
+    },
+    {
+      "id": "cmd-20260403011623",
+      "content": "ls",
+      "client_id": "client-20260403010555",
+      "status": "failed",
+      "result": "exec: \"ls\": executable file not found in %PATH%",
+      "created_at": "2026-04-03T01:16:23.0317053+08:00",
+      "completed_at": "2026-04-03T01:16:23.2468504+08:00"
+    },
+    {
+      "id": "cmd-20260403013032",
+      "content": "dir",
+      "client_id": "client-20260403013011",
+      "status": "failed",
+      "result": "exec: \"dir\": executable file not found in %PATH%",
+      "created_at": "2026-04-03T01:30:32.4537832+08:00",
+      "completed_at": "2026-04-03T01:30:33.1885442+08:00"
+    },
+    {
+      "id": "cmd-20260403013208",
+      "content": "dir",
+      "client_id": "client-20260403013151",
+      "status": "completed",
+      "result": " ������ C �еľ�û�б�ǩ��\r\n �������к��� CCDD-111F\r\n\r\n C:\\Users\\j4543\\Desktop\\test\\NEWTEST ��Ŀ¼\r\n\r\n2026/04/03  01:31    \u003cDIR\u003e          .\r\n2026/02/04  02:48    \u003cDIR\u003e          ..\r\n2026/04/03  01:29    \u003cDIR\u003e          .claude\r\n2026/04/03  01:22    \u003cDIR\u003e          .idea\r\n2026/04/03  01:14               586 build.ps1\r\n2026/04/03  01:23             2,109 CLAUDE.md\r\n2026/04/03  01:31    \u003cDIR\u003e          client\r\n2026/04/03  01:31         9,120,256 client.exe\r\n2026/04/03  01:31                21 client.id\r\n2026/04/03  01:32             4,643 commands.json\r\n2026/04/03  00:15                24 go.mod\r\n2026/04/03  01:29    \u003cDIR\u003e          server\r\n2026/04/03  01:31         9,813,504 server.exe\r\n2026/04/03  01:31                 5 server.lock\r\n2026/04/03  01:31                64 server.log\r\n2026/04/03  01:31                 5 server.pid\r\n2026/04/03  01:32               252 session.json\r\n              11 ���ļ�     18,941,469 �ֽ�\r\n               6 ��Ŀ¼ 192,182,550,528 �����ֽ�\r\n",
+      "created_at": "2026-04-03T01:32:08.5320871+08:00",
+      "completed_at": "2026-04-03T01:32:09.4582516+08:00"
+    },
+    {
+      "id": "cmd-20260403013629",
+      "content": "__EXIT__",
+      "client_id": "client-20260403013616",
+      "status": "completed",
+      "result": "client exited",
+      "created_at": "2026-04-03T01:36:29.4167193+08:00",
+      "completed_at": "2026-04-03T01:36:29.9048868+08:00"
+    },
+    {
+      "id": "cmd-20260403014102",
+      "content": "whoami",
+      "client_id": "client-20260403014041",
+      "status": "completed",
+      "result": "admin\\j4543\r\n",
+      "created_at": "2026-04-03T01:41:02.0395877+08:00",
+      "completed_at": "2026-04-03T01:41:02.6626383+08:00"
+    }
+  ]
+}

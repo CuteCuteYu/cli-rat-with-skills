@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go build:*)",
+      "Bash(powershell -Command \"cd C:\\\\Users\\\\j4543\\\\Desktop\\\\test\\\\NEWTEST; go build -o server.exe server/main.go server/command.go 2>&1\")",
+      "Bash(echo:*)",
+      "Bash(powershell.exe -Command \"$currentPath = [Environment]::GetEnvironmentVariable\\('Path', 'User'\\); $newPath = 'D:\\\\code\\\\go\\\\cli-rat'; if \\($currentPath -notlike \\\\\"*$newPath*\\\\\"\\) { [Environment]::SetEnvironmentVariable\\('Path', \\\\\"$currentPath;$newPath\\\\\", 'User'\\); Write-Host 'Successfully added to PATH' } else { Write-Host 'Already in PATH' }\")",
+      "Bash(powershell.exe -Command \"[Environment]::SetEnvironmentVariable\\('Path', [Environment]::GetEnvironmentVariable\\('Path', 'User'\\) + ';D:\\\\code\\\\go\\\\cli-rat', 'User'\\)\")",
+      "Bash(server:*)",
+      "Bash(where server.exe)"
+    ]
+  }
+}
