@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"cli-rat/types"
@@ -50,6 +51,10 @@ func LoadSession() (*types.Session, error) {
 // SaveSession 保存会话信息到文件
 // 使用 JSON 格式，带缩进便于阅读
 func SaveSession(session *types.Session) error {
+	if session == nil {
+		return fmt.Errorf("会话对象不能为空")
+	}
+
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -83,6 +88,10 @@ func LoadCommands() (*types.CommandStore, error) {
 
 // SaveCommands 保存命令存储到文件
 func SaveCommands(store *types.CommandStore) error {
+	if store == nil {
+		return fmt.Errorf("命令存储对象不能为空")
+	}
+
 	data, err := json.MarshalIndent(store, "", "  ")
 	if err != nil {
 		return fmt.Errorf("序列化命令失败: %v", err)
@@ -97,7 +106,15 @@ func SaveCommands(store *types.CommandStore) error {
 // GetPendingCommand 获取指定客户端的待执行命令
 // 返回状态为 "pending" 的命令，如果没有则返回 nil
 func GetPendingCommand(clientID string) *types.Command {
+	if clientID == "" {
+		return nil
+	}
+
 	store, _ := LoadCommands()
+	if store == nil {
+		return nil
+	}
+
 	for i := range store.Commands {
 		if store.Commands[i].ClientID == clientID && store.Commands[i].Status == "pending" {
 			return &store.Commands[i]
@@ -110,7 +127,18 @@ func GetPendingCommand(clientID string) *types.Command {
 // 如果命令已存在则更新，否则添加新命令
 // 自动维护最大命令数量限制
 func SaveCommand(cmd *types.Command) error {
-	store, _ := LoadCommands()
+	if cmd == nil {
+		return fmt.Errorf("命令对象不能为空")
+	}
+
+	if cmd.ID == "" {
+		return fmt.Errorf("命令ID不能为空")
+	}
+
+	store, err := LoadCommands()
+	if err != nil {
+		return err
+	}
 
 	// 查找并更新现有命令
 	for i := range store.Commands {
@@ -130,8 +158,17 @@ func SaveCommand(cmd *types.Command) error {
 }
 
 // GetCommandByID 根据命令ID获取命令
+// 返回命令指针，如果不存在返回nil
 func GetCommandByID(cmdID string) *types.Command {
+	if cmdID == "" {
+		return nil
+	}
+
 	store, _ := LoadCommands()
+	if store == nil {
+		return nil
+	}
+
 	for _, cmd := range store.Commands {
 		if cmd.ID == cmdID {
 			return &cmd
@@ -144,6 +181,10 @@ func GetCommandByID(cmdID string) *types.Command {
 // 返回最近的命令，最多 MaxCommands 条
 func ListCommands() []types.Command {
 	store, _ := LoadCommands()
+	if store == nil {
+		return []types.Command{}
+	}
+
 	commands := store.Commands
 	if len(commands) > MaxCommands {
 		commands = commands[len(commands)-MaxCommands:]
@@ -154,15 +195,30 @@ func ListCommands() []types.Command {
 // ===== Client ID 管理 =====
 
 // LoadClientID 从文件加载客户端ID
+// 返回客户端ID，如果文件不存在或读取失败返回空字符串
 func LoadClientID(filename string) string {
+	if filename == "" {
+		return ""
+	}
+
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return ""
 	}
-	return string(data)
+
+	// 去除首尾空白字符
+	return strings.TrimSpace(string(data))
 }
 
 // SaveClientID 保存客户端ID到文件
 func SaveClientID(filename, id string) error {
+	if filename == "" {
+		return fmt.Errorf("文件名不能为空")
+	}
+
+	if id == "" {
+		return fmt.Errorf("客户端ID不能为空")
+	}
+
 	return os.WriteFile(filename, []byte(id), 0644)
 }

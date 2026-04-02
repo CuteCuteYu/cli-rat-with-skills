@@ -34,15 +34,19 @@ func AcquireLock() bool {
 		return false
 	}
 	// 写入当前进程ID
-	f.WriteString(fmt.Sprintf("%d", os.Getpid()))
+	if _, err := f.WriteString(fmt.Sprintf("%d", os.Getpid())); err != nil {
+		f.Close()
+		os.Remove(LockFile)
+		return false
+	}
 	f.Close()
 	return true
 }
 
 // ReleaseLock 释放锁
 // 删除锁文件，允许其他进程启动
-func ReleaseLock() {
-	os.Remove(LockFile)
+func ReleaseLock() error {
+	return os.Remove(LockFile)
 }
 
 // IsLocked 检查是否已被锁定
@@ -56,6 +60,9 @@ func IsLocked() bool {
 
 // SavePID 保存进程ID到文件
 func SavePID(pid int) error {
+	if pid <= 0 {
+		return fmt.Errorf("无效的PID: %d", pid)
+	}
 	return os.WriteFile(PIDFile, []byte(fmt.Sprintf("%d", pid)), 0644)
 }
 
@@ -63,32 +70,53 @@ func SavePID(pid int) error {
 func LoadPID() (int, error) {
 	data, err := os.ReadFile(PIDFile)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("读取PID文件失败: %v", err)
 	}
+
 	var pid int
-	fmt.Sscanf(string(data), "%d", &pid)
+	n, err := fmt.Sscanf(string(data), "%d", &pid)
+	if err != nil || n != 1 {
+		return 0, fmt.Errorf("解析PID失败: %v", err)
+	}
+
+	if pid <= 0 {
+		return 0, fmt.Errorf("无效的PID值: %d", pid)
+	}
+
 	return pid, nil
 }
 
 // RemovePID 删除PID文件
-func RemovePID() {
-	os.Remove(PIDFile)
+func RemovePID() error {
+	return os.Remove(PIDFile)
 }
 
 // ===== 进程操作 =====
 
 // FindProcess 查找指定PID的进程
 func FindProcess(pid int) (*os.Process, error) {
+	if pid <= 0 {
+		return nil, fmt.Errorf("无效的PID: %d", pid)
+	}
 	return os.FindProcess(pid)
 }
 
 // KillProcess 杀死指定PID的进程
 func KillProcess(pid int) error {
+	if pid <= 0 {
+		return fmt.Errorf("无效的PID: %d", pid)
+	}
+
 	proc, err := os.FindProcess(pid)
 	if err != nil {
-		return err
+		return fmt.Errorf("查找进程失败: %v", err)
 	}
-	return proc.Kill()
+
+	if err := proc.Kill(); err != nil {
+		return fmt.Errorf("杀死进程失败: %v", err)
+	}
+
+	return nil
 }
 
 // ===== 后台运行 =====
@@ -97,6 +125,14 @@ func KillProcess(pid int) error {
 // 启动一个新的进程实例，重定向输出到日志文件
 // 返回新进程的句柄
 func DetachProcess(listenIP string, listenPort int) (*os.Process, error) {
+	// 验证参数
+	if listenIP == "" {
+		return nil, fmt.Errorf("监听IP不能为空")
+	}
+	if listenPort <= 0 || listenPort > 65535 {
+		return nil, fmt.Errorf("端口号必须在 1-65535 之间，当前值: %d", listenPort)
+	}
+
 	// 获取当前可执行文件路径
 	execName, err := os.Executable()
 	if err != nil {

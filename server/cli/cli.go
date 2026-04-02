@@ -4,6 +4,7 @@ package cli
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"cli-rat/pkg/process"
@@ -60,7 +61,10 @@ func (c *CLI) Status() {
 	if err != nil {
 		fmt.Println("状态: 未运行")
 		fmt.Println("PID文件存在但进程已退出")
-		process.RemovePID()
+		// 清理无效的PID文件
+		if err := process.RemovePID(); err != nil {
+			log.Printf("[警告] 删除PID文件失败: %v\n", err)
+		}
 		return
 	}
 
@@ -76,11 +80,12 @@ func (c *CLI) ListClients() {
 	clients := c.server.ListClients()
 	if len(clients) == 0 {
 		fmt.Println("暂无在线客户端")
-	} else {
-		for i, c := range clients {
-			fmt.Printf("[%d] %s (%s) 最后活跃: %s\n",
-				i+1, c.ID, c.Address, c.LastPoll.Format("2006-01-02 15:04:05"))
-		}
+		return
+	}
+
+	for i, c := range clients {
+		fmt.Printf("[%d] %s (%s) 最后活跃: %s\n",
+			i+1, c.ID, c.Address, c.LastPoll.Format("2006-01-02 15:04:05"))
 	}
 }
 
@@ -89,6 +94,14 @@ func (c *CLI) ListClients() {
 // cmdContent: 命令内容
 // 返回错误信息（如果发送失败）
 func (c *CLI) SendCommand(clientID, cmdContent string) error {
+	// 验证参数
+	if clientID == "" {
+		return fmt.Errorf("客户端ID不能为空")
+	}
+	if cmdContent == "" {
+		return fmt.Errorf("命令内容不能为空")
+	}
+
 	_, err := c.server.SendCommand(clientID, cmdContent)
 	if err != nil {
 		return err
@@ -103,12 +116,13 @@ func (c *CLI) History() {
 	commands := storage.ListCommands()
 	if len(commands) == 0 {
 		fmt.Println("暂无命令记录")
-	} else {
-		fmt.Println("=== 最近10条命令 ===")
-		for i, c := range commands {
-			fmt.Printf("[%d] %s -> %s 状态: %s\n",
-				i+1, c.ID, c.Content, c.Status)
-		}
+		return
+	}
+
+	fmt.Println("=== 最近10条命令 ===")
+	for i, c := range commands {
+		fmt.Printf("[%d] %s -> %s 状态: %s\n",
+			i+1, c.ID, c.Content, c.Status)
 	}
 }
 
@@ -116,11 +130,18 @@ func (c *CLI) History() {
 // cmdID: 命令ID
 // 显示命令的完整信息，包括执行结果
 func (c *CLI) ShowCommand(cmdID string) {
+	// 验证参数
+	if cmdID == "" {
+		fmt.Println("错误: 命令ID不能为空")
+		return
+	}
+
 	cmd := storage.GetCommandByID(cmdID)
 	if cmd == nil {
 		fmt.Println("命令不存在")
 		return
 	}
+
 	fmt.Printf("ID: %s\n", cmd.ID)
 	fmt.Printf("内容: %s\n", cmd.Content)
 	fmt.Printf("客户端: %s\n", cmd.ClientID)
@@ -138,6 +159,11 @@ func (c *CLI) ShowCommand(cmdID string) {
 // clientID: 要断开的客户端ID
 // 流程：先发送 __EXIT__ 命令，等待客户端执行，然后从列表中移除
 func (c *CLI) KillClient(clientID string) error {
+	// 验证参数
+	if clientID == "" {
+		return fmt.Errorf("客户端ID不能为空")
+	}
+
 	// 检查客户端是否存在
 	client := c.server.GetClient(clientID)
 	if client == nil {
@@ -180,13 +206,21 @@ func (c *CLI) Stop() error {
 
 	// 杀死进程
 	if err := process.KillProcess(pid); err != nil {
-		process.RemovePID()
+		// 清理无效的PID文件
+		if err := process.RemovePID(); err != nil {
+			log.Printf("[警告] 删除PID文件失败: %v\n", err)
+		}
 		return fmt.Errorf("找不到服务端进程")
 	}
 
 	// 清理文件
-	process.RemovePID()
-	process.ReleaseLock()
+	if err := process.RemovePID(); err != nil {
+		log.Printf("[警告] 删除PID文件失败: %v\n", err)
+	}
+	if err := process.ReleaseLock(); err != nil {
+		log.Printf("[警告] 释放锁失败: %v\n", err)
+	}
+
 	fmt.Println("=== 服务端已停止 ===")
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -29,6 +30,9 @@ type Server struct {
 func New(ip string, port int) *Server {
 	// 加载已有会话
 	session, _ := storage.LoadSession()
+	if session == nil {
+		session = &types.Session{Clients: []types.Client{}}
+	}
 	return &Server{
 		Session:    session,
 		listenIP:   ip,
@@ -48,6 +52,7 @@ func (s *Server) ListenAddr() string {
 // POST /register
 // 客户端首次连接时调用此接口注册并获取唯一ID
 func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	// 验证请求方法
 	if r.Method != http.MethodPost {
 		http.Error(w, "只支持POST方法", http.StatusMethodNotAllowed)
 		return
@@ -55,10 +60,21 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 解析请求
 	var req types.RegisterRequest
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "读取请求失败", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
 
 	if err := json.Unmarshal(body, &req); err != nil {
 		http.Error(w, "解析JSON失败", http.StatusBadRequest)
+		return
+	}
+
+	// 验证请求参数
+	if req.Name == "" {
+		http.Error(w, "客户端名称不能为空", http.StatusBadRequest)
 		return
 	}
 
@@ -89,7 +105,9 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	s.mu.Unlock()
 
 	// 持久化会话
-	storage.SaveSession(s.Session)
+	if err := storage.SaveSession(s.Session); err != nil {
+		log.Printf("[错误] 保存会话失败: %v\n", err)
+	}
 
 	// 构建响应
 	resp := types.RegisterResponse{
@@ -98,7 +116,9 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("[错误] 编码响应失败: %v\n", err)
+	}
 
 	fmt.Printf("[注册] 客户端: %s (%s) 已注册, ID: %s\n", req.Name, client.Address, clientID)
 }
@@ -107,7 +127,7 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 // GET /poll?client_id=xxx
 // 客户端定期调用此接口获取待执行命令
 func (s *Server) PollHandler(w http.ResponseWriter, r *http.Request) {
-	// 获取客户端ID参数
+	// 获取并验证客户端ID参数
 	clientID := r.URL.Query().Get("client_id")
 	if clientID == "" {
 		http.Error(w, "缺少client_id参数", http.StatusBadRequest)
@@ -116,14 +136,22 @@ func (s *Server) PollHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 更新客户端最后活跃时间
 	s.mu.Lock()
+	found := false
 	for i := range s.Session.Clients {
 		if s.Session.Clients[i].ID == clientID {
 			s.Session.Clients[i].LastPoll = time.Now()
+			found = true
 			break
 		}
 	}
 	s.mu.Unlock()
-	storage.SaveSession(s.Session)
+
+	// 持久化活跃时间更新
+	if found {
+		if err := storage.SaveSession(s.Session); err != nil {
+			log.Printf("[错误] 保存会话失败: %v\n", err)
+		}
+	}
 
 	// 获取该客户端的待执行命令
 	cmd := storage.GetPendingCommand(clientID)
@@ -131,22 +159,29 @@ func (s *Server) PollHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if cmd == nil {
 		// 无待执行命令
-		json.NewEncoder(w).Encode(types.PollResponse{Status: "no_command"})
+		if err := json.NewEncoder(w).Encode(types.PollResponse{Status: "no_command"}); err != nil {
+			log.Printf("[错误] 编码响应失败: %v\n", err)
+		}
 		return
 	}
 
 	// 有命令，更新状态为执行中
 	cmd.Status = "executing"
-	storage.SaveCommand(cmd)
+	if err := storage.SaveCommand(cmd); err != nil {
+		log.Printf("[错误] 保存命令状态失败: %v\n", err)
+	}
 
 	// 返回命令详情
-	json.NewEncoder(w).Encode(cmd)
+	if err := json.NewEncoder(w).Encode(cmd); err != nil {
+		log.Printf("[错误] 编码响应失败: %v\n", err)
+	}
 }
 
 // SubmitHandler 处理命令执行结果提交请求
 // POST /result
 // 客户端执行完命令后调用此接口提交结果
 func (s *Server) SubmitHandler(w http.ResponseWriter, r *http.Request) {
+	// 验证请求方法
 	if r.Method != http.MethodPost {
 		http.Error(w, "只支持POST方法", http.StatusMethodNotAllowed)
 		return
@@ -154,10 +189,21 @@ func (s *Server) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 解析请求
 	var req types.SubmitRequest
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "读取请求失败", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
 
 	if err := json.Unmarshal(body, &req); err != nil {
 		http.Error(w, "解析JSON失败", http.StatusBadRequest)
+		return
+	}
+
+	// 验证请求参数
+	if req.CommandID == "" {
+		http.Error(w, "命令ID不能为空", http.StatusBadRequest)
 		return
 	}
 
@@ -173,11 +219,18 @@ func (s *Server) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 	cmd.Result = req.Result
 	cmd.CompletedAt = time.Now()
 
-	storage.SaveCommand(cmd)
+	if err := storage.SaveCommand(cmd); err != nil {
+		log.Printf("[错误] 保存命令结果失败: %v\n", err)
+		http.Error(w, "保存结果失败", http.StatusInternalServerError)
+		return
+	}
 
 	// 返回成功响应
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(types.SubmitResponse{Status: "success"})
+	resp := types.SubmitResponse{Status: "success"}
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("[错误] 编码响应失败: %v\n", err)
+	}
 
 	fmt.Printf("[结果] 命令 %s 执行完成, 状态: %s\n", cmd.ID, cmd.Status)
 }
@@ -186,6 +239,7 @@ func (s *Server) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 // POST /unregister
 // 客户端退出时调用此接口注销
 func (s *Server) UnregisterHandler(w http.ResponseWriter, r *http.Request) {
+	// 验证请求方法
 	if r.Method != http.MethodPost {
 		http.Error(w, "只支持POST方法", http.StatusMethodNotAllowed)
 		return
@@ -193,10 +247,21 @@ func (s *Server) UnregisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 解析请求
 	var req types.UnregisterRequest
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "读取请求失败", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
 
 	if err := json.Unmarshal(body, &req); err != nil {
 		http.Error(w, "解析JSON失败", http.StatusBadRequest)
+		return
+	}
+
+	// 验证请求参数
+	if req.ClientID == "" {
+		http.Error(w, "客户端ID不能为空", http.StatusBadRequest)
 		return
 	}
 
@@ -204,7 +269,10 @@ func (s *Server) UnregisterHandler(w http.ResponseWriter, r *http.Request) {
 	if s.RemoveClient(req.ClientID) {
 		fmt.Printf("[注销] 客户端 %s 已注销\n", req.ClientID)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(types.UnregisterResponse{Status: "unregistered"})
+		resp := types.UnregisterResponse{Status: "unregistered"}
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("[错误] 编码响应失败: %v\n", err)
+		}
 		return
 	}
 
@@ -234,6 +302,7 @@ func (s *Server) ListClients() []types.Client {
 }
 
 // GetClient 根据ID获取客户端
+// 返回客户端指针，如果不存在返回nil
 func (s *Server) GetClient(id string) *types.Client {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -255,7 +324,10 @@ func (s *Server) RemoveClient(id string) bool {
 	for i, c := range s.Session.Clients {
 		if c.ID == id {
 			s.Session.Clients = append(s.Session.Clients[:i], s.Session.Clients[i+1:]...)
-			storage.SaveSession(s.Session)
+			if err := storage.SaveSession(s.Session); err != nil {
+				log.Printf("[错误] 保存会话失败: %v\n", err)
+				return false
+			}
 			return true
 		}
 	}
@@ -265,8 +337,16 @@ func (s *Server) RemoveClient(id string) bool {
 // SendCommand 向指定客户端发送命令
 // clientID: 目标客户端ID
 // content: 命令内容
-// 返回创建的命令对象
+// 返回创建的命令对象和错误信息
 func (s *Server) SendCommand(clientID, content string) (*types.Command, error) {
+	// 验证参数
+	if clientID == "" {
+		return nil, fmt.Errorf("客户端ID不能为空")
+	}
+	if content == "" {
+		return nil, fmt.Errorf("命令内容不能为空")
+	}
+
 	s.mu.RLock()
 	// 检查客户端是否存在
 	found := false
@@ -291,7 +371,10 @@ func (s *Server) SendCommand(clientID, content string) (*types.Command, error) {
 		CreatedAt: time.Now(),
 	}
 
-	storage.SaveCommand(cmd)
+	if err := storage.SaveCommand(cmd); err != nil {
+		return nil, fmt.Errorf("保存命令失败: %v", err)
+	}
+
 	fmt.Printf("[命令] 已发送给 %s: %s\n", clientID, content)
 
 	return cmd, nil

