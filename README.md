@@ -72,8 +72,8 @@
 #### 方式一：使用构建脚本（推荐）
 
 ```powershell
-# 进入项目目录
-cd C:\Users\j4543\Desktop\test\NEWTEST
+# 进入项目目录（请替换为你的实际项目路径）
+cd <项目路径>
 
 # 执行构建脚本
 powershell -File build.ps1
@@ -90,8 +90,8 @@ Build complete!
 #### 方式二：手动编译
 
 ```powershell
-# 进入项目目录
-cd C:\Users\j4543\Desktop\test\NEWTEST
+# 进入项目目录（请替换为你的实际项目路径）
+cd <项目路径>
 
 # 编译服务端（包含 main.go 和 command.go）
 go build -o server.exe server/main.go server/command.go
@@ -164,8 +164,8 @@ server help
 **方法一：临时添加（当前会话）**
 
 ```powershell
-# 添加到当前会话 PATH
-$env:PATH += ";C:\Users\j4543\Desktop\test\NEWTEST"
+# 添加到当前会话 PATH（请替换为你的实际项目路径）
+$env:PATH += ";<项目路径>"
 
 # 验证
 server help
@@ -174,8 +174,8 @@ server help
 **方法二：永久添加（PowerShell）**
 
 ```powershell
-# 添加到用户 PATH（永久）
-[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";C:\Users\j4543\Desktop\test\NEWTEST", "User")
+# 添加到用户 PATH（永久，请替换为你的实际项目路径）
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";<项目路径>", "User")
 
 # 刷新环境变量
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
@@ -186,7 +186,7 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 1. 右键「此电脑」→「属性」
 2. 「高级系统设置」→「环境变量」
 3. 在「用户变量」中找到 `Path`，点击「编辑」
-4. 点击「新建」，添加 `C:\Users\j4543\Desktop\test\NEWTEST`
+4. 点击「新建」，添加你的项目路径
 5. 确定保存，重新打开终端
 
 #### Claude Code Skill 使用

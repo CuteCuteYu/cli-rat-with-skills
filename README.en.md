@@ -72,8 +72,8 @@ A client-server architecture command distribution system developed in Go. The se
 #### Method 1: Using Build Script (Recommended)
 
 ```powershell
-# Navigate to project directory
-cd C:\Users\j4543\Desktop\test\NEWTEST
+# Navigate to project directory (replace with your actual project path)
+cd <项目路径>
 
 # Execute build script
 powershell -File build.ps1
@@ -90,8 +90,8 @@ Build complete!
 #### Method 2: Manual Compilation
 
 ```powershell
-# Navigate to project directory
-cd C:\Users\j4543\Desktop\test\NEWTEST
+# Navigate to project directory (replace with your actual project path)
+cd <项目路径>
 
 # Compile server (includes main.go and command.go)
 go build -o server.exe server/main.go server/command.go
@@ -164,8 +164,8 @@ Add `server.exe` to the system PATH environment variable to use the `server` com
 **Method 1: Temporary Addition (Current Session)**
 
 ```powershell
-# Add to current session PATH
-$env:PATH += ";C:\Users\j4543\Desktop\test\NEWTEST"
+# Add to current session PATH (replace with your actual project path)
+$env:PATH += ";<项目路径>"
 
 # Verify
 server help
@@ -174,8 +174,8 @@ server help
 **Method 2: Permanent Addition (PowerShell)**
 
 ```powershell
-# Add to user PATH (permanent)
-[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";C:\Users\j4543\Desktop\test\NEWTEST", "User")
+# Add to user PATH (permanent, replace with your actual project path)
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";<项目路径>", "User")
 
 # Refresh environment variables
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
@@ -186,7 +186,7 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 1. Right-click "This PC" → "Properties"
 2. "Advanced system settings" → "Environment Variables"
 3. Find `Path` under "User variables", click "Edit"
-4. Click "New", add `C:\Users\j4543\Desktop\test\NEWTEST`
+4. Click "New", add your project path
 5. Confirm and save, reopen terminal
 
 #### Claude Code Skill Usage
