@@ -93,11 +93,11 @@ Build complete!
 # 进入项目目录（请替换为你的实际项目路径）
 cd <项目路径>
 
-# 编译服务端（包含 main.go 和 command.go）
-go build -o server.exe server/main.go server/command.go
+# 编译服务端
+go build -o server.exe ./server
 
 # 编译客户端
-go build -o client.exe client/main.go
+go build -o client.exe ./client
 ```
 
 #### 方式三：交叉编译
@@ -108,14 +108,14 @@ go build -o client.exe client/main.go
 # Linux 64位
 $env:GOOS = "linux"
 $env:GOARCH = "amd64"
-go build -o server-linux server/main.go server/command.go
-go build -o client-linux client/main.go
+go build -o server-linux ./server
+go build -o client-linux ./client
 
 # macOS 64位
 $env:GOOS = "darwin"
 $env:GOARCH = "amd64"
-go build -o server-mac server/main.go server/command.go
-go build -o client-mac client/main.go
+go build -o server-mac ./server
+go build -o client-mac ./client
 
 # 恢复 Windows 编译
 $env:GOOS = "windows"
@@ -126,12 +126,12 @@ $env:GOARCH = "amd64"
 
 ```powershell
 # 减小可执行文件体积
-go build -ldflags "-s -w" -o server.exe server/main.go server/command.go
-go build -ldflags "-s -w" -o client.exe client/main.go
+go build -ldflags "-s -w" -o server.exe ./server
+go build -ldflags "-s -w" -o client.exe ./client
 
 # 完整优化（推荐发布时使用）
-go build -ldflags "-s -w" -trimpath -o server.exe server/main.go server/command.go
-go build -ldflags "-s -w" -trimpath -o client.exe client/main.go
+go build -ldflags "-s -w" -trimpath -o server.exe ./server
+go build -ldflags "-s -w" -trimpath -o client.exe ./client
 ```
 
 ### 编译产物
@@ -488,12 +488,18 @@ var (
 ## 项目结构
 
 ```
-NEWTEST/
+cli-rat/
 ├── server/
 │   ├── main.go      # 服务端主程序
-│   └── command.go   # 命令管理模块
+│   ├── handlers/    # HTTP 处理器
+│   └── cli/         # 命令行接口
 ├── client/
 │   └── main.go      # 客户端程序
+├── pkg/
+│   ├── storage/     # 文件存储操作
+│   ├── process/     # 进程管理
+│   └── httpclient/  # HTTP 通信
+├── types/           # 共享数据类型
 ├── build.ps1        # 构建脚本
 ├── go.mod           # Go 模块配置
 └── README.md        # 本文件

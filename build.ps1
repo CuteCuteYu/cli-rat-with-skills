@@ -1,7 +1,7 @@
 # Build script for server and client
 
 # Build server
-go build -o server.exe server/main.go server/command.go
+go build -o server.exe ./server
 if ($LASTEXITCODE -eq 0) {
     Write-Host "[OK] Server built successfully" -ForegroundColor Green
 } else {
@@ -10,7 +10,7 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 # Build client
-go build -o client.exe client/main.go
+go build -o client.exe ./client
 if ($LASTEXITCODE -eq 0) {
     Write-Host "[OK] Client built successfully" -ForegroundColor Green
 } else {

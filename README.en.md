@@ -93,11 +93,11 @@ Build complete!
 # Navigate to project directory (replace with your actual project path)
 cd <项目路径>
 
-# Compile server (includes main.go and command.go)
-go build -o server.exe server/main.go server/command.go
+# Compile server
+go build -o server.exe ./server
 
 # Compile client
-go build -o client.exe client/main.go
+go build -o client.exe ./client
 ```
 
 #### Method 3: Cross-Compilation
@@ -108,14 +108,14 @@ For compiling to other platforms:
 # Linux 64-bit
 $env:GOOS = "linux"
 $env:GOARCH = "amd64"
-go build -o server-linux server/main.go server/command.go
-go build -o client-linux client/main.go
+go build -o server-linux ./server
+go build -o client-linux ./client
 
 # macOS 64-bit
 $env:GOOS = "darwin"
 $env:GOARCH = "amd64"
-go build -o server-mac server/main.go server/command.go
-go build -o client-mac client/main.go
+go build -o server-mac ./server
+go build -o client-mac ./client
 
 # Restore Windows compilation
 $env:GOOS = "windows"
@@ -126,12 +126,12 @@ $env:GOARCH = "amd64"
 
 ```powershell
 # Reduce executable file size
-go build -ldflags "-s -w" -o server.exe server/main.go server/command.go
-go build -ldflags "-s -w" -o client.exe client/main.go
+go build -ldflags "-s -w" -o server.exe ./server
+go build -ldflags "-s -w" -o client.exe ./client
 
 # Full optimization (recommended for release)
-go build -ldflags "-s -w" -trimpath -o server.exe server/main.go server/command.go
-go build -ldflags "-s -w" -trimpath -o client.exe client/main.go
+go build -ldflags "-s -w" -trimpath -o server.exe ./server
+go build -ldflags "-s -w" -trimpath -o client.exe ./client
 ```
 
 ### Build Artifacts
@@ -488,12 +488,18 @@ This system is designed for use in controlled environments within a local area n
 ## Project Structure
 
 ```
-NEWTEST/
+cli-rat/
 ├── server/
 │   ├── main.go      # Server main program
-│   └── command.go   # Command management module
+│   ├── handlers/    # HTTP handlers
+│   └── cli/         # Command-line interface
 ├── client/
 │   └── main.go      # Client program
+├── pkg/
+│   ├── storage/     # File storage operations
+│   ├── process/     # Process management
+│   └── httpclient/  # HTTP communication
+├── types/           # Shared data types
 ├── build.ps1        # Build script
 ├── go.mod           # Go module configuration
 └── README.md        # This file
