@@ -203,15 +203,24 @@ This project includes the `c2-server` skill, allowing you to operate the server 
 **Detailed steps:**
 
 ```powershell
-# Step 1: Compile the project
-cd D:\code\go\cli-rat\cli-rat-with-skills
+# Step 1: Compile the project (replace with your actual project path)
+cd <项目路径>
 powershell -File build.ps1
 
 # Step 2: Add to environment variables (permanent, replace with your actual path)
-[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";D:\code\go\cli-rat\cli-rat-with-skills", "User")
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";<项目路径>", "User")
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 
 # Step 3: Verify installation
+server help
+```
+
+**Or use current directory (simplest):**
+
+```powershell
+# Execute in project directory, automatically uses current path
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";$PWD", "User")
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 server help
 ```
 
@@ -239,8 +248,8 @@ copy .claude\skills\c2-server\SKILL.md ~/.claude/skills/c2-server/SKILL.md
 **Method 2: Symbolic Link (Easier for development updates)**
 
 ```powershell
-# On Windows using mklink
-mklink /D "C:\Users\YourUsername\.claude\skills\c2-server" "D:\code\go\cli-rat\cli-rat-with-skills\.claude\skills\c2-server"
+# On Windows using mklink (replace with your actual path)
+mklink /D "%USERPROFILE%\.claude\skills\c2-server" "<项目路径>\.claude\skills\c2-server"
 ```
 
 ##### Using the Skill

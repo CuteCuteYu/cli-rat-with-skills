@@ -16,8 +16,8 @@ description: 命令分发服务端控制工具。用于管理客户端、发送�
 首先需要将项目编译成二进制文件：
 
 ```powershell
-# 进入项目目录
-cd D:\code\go\cli-rat\cli-rat-with-skills
+# 进入项目目录（请替换为你的实际项目路径）
+cd <项目路径>
 
 # 使用构建脚本编译（推荐）
 powershell -File build.ps1
@@ -37,7 +37,7 @@ go build -o client.exe client/main.go
 
 ```powershell
 # 添加到当前会话 PATH（请替换为你的实际项目路径）
-$env:PATH += ";D:\code\go\cli-rat\cli-rat-with-skills"
+$env:PATH += ";<项目路径>"
 
 # 验证是否成功
 server help
@@ -47,7 +47,7 @@ server help
 
 ```powershell
 # 添加到用户 PATH（永久有效，请替换为你的实际项目路径）
-[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";D:\code\go\cli-rat\cli-rat-with-skills", "User")
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";<项目路径>", "User")
 
 # 刷新当前会话的环境变量
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
@@ -56,12 +56,27 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 server help
 ```
 
-#### 方法三：图形界面添加
+#### 方法三：使用当前目录（最简单）
+
+如果你已经在项目目录中，可以直接使用 `$PWD` 变量：
+
+```powershell
+# 永久添加当前目录到 PATH
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";$PWD", "User")
+
+# 刷新环境变量
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
+
+# 验证
+server help
+```
+
+#### 方法四：图形界面添加
 
 1. 右键「此电脑」→「属性」
 2. 「高级系统设置」→「环境变量」
 3. 在「用户变量」中找到 `Path`，点击「编辑」
-4. 点击「新建」，添加你的项目路径（例如：`D:\code\go\cli-rat\cli-rat-with-skills`）
+4. 点击「新建」，添加你的项目路径
 5. 确定保存，重新打开终端
 
 ### 3. 验证安装

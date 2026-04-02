@@ -203,15 +203,24 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 **详细步骤：**
 
 ```powershell
-# 步骤1：编译项目
-cd D:\code\go\cli-rat\cli-rat-with-skills
+# 步骤1：编译项目（请替换为你的实际项目路径）
+cd <项目路径>
 powershell -File build.ps1
 
 # 步骤2：添加到环境变量（永久有效，请替换为你的实际路径）
-[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";D:\code\go\cli-rat\cli-rat-with-skills", "User")
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";<项目路径>", "User")
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 
 # 步骤3：验证安装
+server help
+```
+
+**或使用当前目录（最简单）：**
+
+```powershell
+# 在项目目录中执行，自动使用当前路径
+[Environment]::SetEnvironmentVariable("Path", $env:PATH + ";$PWD", "User")
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 server help
 ```
 
@@ -239,8 +248,8 @@ copy .claude\skills\c2-server\SKILL.md ~/.claude/skills/c2-server/SKILL.md
 **方式二：符号链接（便于开发更新）**
 
 ```powershell
-# 在 Windows 上使用 mklink
-mklink /D "C:\Users\YourUsername\.claude\skills\c2-server" "D:\code\go\cli-rat\cli-rat-with-skills\.claude\skills\c2-server"
+# 在 Windows 上使用 mklink（请替换为你的实际路径）
+mklink /D "%USERPROFILE%\.claude\skills\c2-server" "<项目路径>\.claude\skills\c2-server"
 ```
 
 ##### 使用 Skill
