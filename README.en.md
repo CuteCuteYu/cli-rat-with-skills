@@ -191,7 +191,37 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 
 #### Claude Code Skill Usage
 
-A `c2-server` skill has been created. After installing it in `~/.claude/skills/`, you can operate the server using natural language in Claude Code:
+This project includes the `c2-server` skill, allowing you to operate the server using natural language in Claude Code.
+
+##### Skill File Location
+
+The skill file is located in the project root directory:
+```
+.claude/skills/c2-server/SKILL.md
+```
+
+##### Installing the Skill
+
+**Method 1: Copy to Claude Code skills directory (Recommended)**
+
+```powershell
+# Create Claude Code skills directory (if it doesn't exist)
+mkdir -p ~/.claude/skills/c2-server
+
+# Copy skill file
+copy .claude\skills\c2-server\SKILL.md ~/.claude/skills/c2-server/SKILL.md
+```
+
+**Method 2: Symbolic Link (Easier for development updates)**
+
+```powershell
+# On Windows using mklink
+mklink /D "C:\Users\YourUsername\.claude\skills\c2-server" "D:\code\go\cli-rat\cli-rat-with-skills\.claude\skills\c2-server"
+```
+
+##### Using the Skill
+
+After installation, you can operate the server using natural language in Claude Code:
 
 ```
 You: Start the server
@@ -202,7 +232,26 @@ Claude: server list
 
 You: Send ipconfig command to client-xxx
 Claude: server send client-xxx "ipconfig"
+
+You: View command history
+Claude: server history
+
+You: Disconnect client client-xxx
+Claude: server kill client-xxx
 ```
+
+##### Supported Operations
+
+- Start/Stop server
+- View online client list
+- Send commands to specified clients
+- View command execution history
+- View command details and results
+- Disconnect client connections
+
+##### Skill File Content
+
+The complete skill file is located at `.claude/skills/c2-server/SKILL.md`, containing detailed instructions and examples for all commands.
 
 ### Server Commands
 

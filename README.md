@@ -191,7 +191,37 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User")
 
 #### Claude Code Skill 使用
 
-已创建 `c2-server` skill，安装到 `~/.claude/skills/` 目录后，可在 Claude Code 中直接用自然语言操作服务端：
+本项目包含 `c2-server` skill，让您可以在 Claude Code 中使用自然语言操作服务端。
+
+##### Skill 文件位置
+
+Skill 文件位于项目根目录：
+```
+.claude/skills/c2-server/SKILL.md
+```
+
+##### 安装 Skill
+
+**方式一：复制到 Claude Code skills 目录（推荐）**
+
+```powershell
+# 创建 Claude Code skills 目录（如果不存在）
+mkdir -p ~/.claude/skills/c2-server
+
+# 复制 skill 文件
+copy .claude\skills\c2-server\SKILL.md ~/.claude/skills/c2-server/SKILL.md
+```
+
+**方式二：符号链接（便于开发更新）**
+
+```powershell
+# 在 Windows 上使用 mklink
+mklink /D "C:\Users\YourUsername\.claude\skills\c2-server" "D:\code\go\cli-rat\cli-rat-with-skills\.claude\skills\c2-server"
+```
+
+##### 使用 Skill
+
+安装后，您可以在 Claude Code 中使用自然语言操作服务端：
 
 ```
 你：启动服务端
@@ -202,7 +232,26 @@ Claude：server list
 
 你：向 client-xxx 发送 ipconfig 命令
 Claude：server send client-xxx "ipconfig"
+
+你：查看命令历史
+Claude：server history
+
+你：断开客户端 client-xxx
+Claude：server kill client-xxx
 ```
+
+##### Skill 支持的操作
+
+- 启动/停止服务端
+- 查看在线客户端列表
+- 发送命令到指定客户端
+- 查看命令执行历史
+- 查看命令详情和结果
+- 断开客户端连接
+
+##### Skill 文件内容
+
+完整的 Skill 文件位于 `.claude/skills/c2-server/SKILL.md`，包含所有命令的详细说明和示例。
 
 ### 服务端命令
 
